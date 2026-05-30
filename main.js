@@ -129,7 +129,7 @@ ipcMain.handle('native-export', function(event, data) {
   var fps = data.fps || 30;
   var crf = data.crf || 23;
   var audioJob = data.audioJob;
-  var waveDataUrl = data.waveDataUrl;
+  var overlayData = data.overlayData;
 
   var ffmpegPath = getFFmpegPath();
   if (!ffmpegPath) return Promise.resolve({ ok: false, error: 'ไม่พบ ffmpeg binary' });
@@ -246,24 +246,44 @@ ipcMain.handle('native-export', function(event, data) {
     ]).then(function() { return mixOut; });
 
   }).then(function(currentFile) {
-    if (!waveDataUrl) return currentFile;
-    sendProgress(88, 'วาง waveform...');
-    var b64 = waveDataUrl.split(',')[1];
-    var wavePng = path.join(tmpDir, 'wave.png');
-    fs.writeFileSync(wavePng, Buffer.from(b64, 'base64'));
-    var waveOut = path.join(tmpDir, 'waved.mp4');
-    // สำคัญ: -loop 1 ให้ PNG วนเป็นวิดีโอ + เอา shortest ออก + ใช้ -t ความยาวรวม
-    // มิฉะนั้น overlay กับ PNG รูปเดียวจะตัดวิดีโอเหลือ 1 เฟรม (ภาพค้าง)
+    if (!overlayData || !overlayData.frames || overlayData.frames.length === 0) return currentFile;
+    sendProgress(88, 'วาง waveform + โลโก้...');
+
+    // เขียน PNG sequence ลง temp
+    var ovFps = overlayData.fps || 12;
+    var frameDir = path.join(tmpDir, 'ovframes');
+    fs.mkdirSync(frameDir);
+    for (var fidx = 0; fidx < overlayData.frames.length; fidx++) {
+      var fb64 = overlayData.frames[fidx].split(',')[1];
+      var fnum = String(fidx);
+      while (fnum.length < 5) fnum = '0' + fnum;
+      fs.writeFileSync(path.join(frameDir, 'f' + fnum + '.png'), Buffer.from(fb64, 'base64'));
+    }
+
+    // encode PNG sequence → overlay video
+    var ovVideo = path.join(tmpDir, 'overlay.mp4');
+    var framePattern = path.join(frameDir, 'f%05d.png');
+
     return runFFmpeg(ffmpegPath, [
-      '-i', currentFile,
-      '-loop', '1', '-i', wavePng,
-      '-filter_complex', '[1:v]colorkey=0x000000:0.15:0.1[wk];[0:v][wk]overlay=0:0[vout]',
-      '-map', '[vout]', '-map', '0:a?',
-      '-c:v', 'libx264', '-crf', String(crf), '-preset', 'fast', '-pix_fmt', 'yuv420p',
-      '-c:a', 'copy',
-      '-t', String(totalDur),
-      '-y', waveOut
-    ]).then(function() { return waveOut; });
+      '-framerate', String(ovFps),
+      '-i', framePattern,
+      '-c:v', 'libx264', '-preset', 'fast', '-pix_fmt', 'yuv420p',
+      '-r', '30',
+      '-y', ovVideo
+    ]).then(function() {
+      // overlay video (animated) ทับ main video ด้วย colorkey
+      var waveOut = path.join(tmpDir, 'waved.mp4');
+      return runFFmpeg(ffmpegPath, [
+        '-i', currentFile,
+        '-i', ovVideo,
+        '-filter_complex', '[1:v]colorkey=0x000000:0.15:0.1[wk];[0:v][wk]overlay=0:0[vout]',
+        '-map', '[vout]', '-map', '0:a?',
+        '-c:v', 'libx264', '-crf', String(crf), '-preset', 'fast', '-pix_fmt', 'yuv420p',
+        '-c:a', 'copy',
+        '-t', String(totalDur),
+        '-y', waveOut
+      ]).then(function() { return waveOut; });
+    });
 
   }).then(function(currentFile) {
     sendProgress(96, 'บันทึก...');
@@ -291,4 +311,3 @@ app.on('second-instance', function() {
     mainWindow.focus();
   }
 });
-

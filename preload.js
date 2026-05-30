@@ -12,14 +12,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   chooseExportPath: function(filename) {
     return ipcRenderer.invoke('choose-export-path', { filename: filename });
   },
-  nativeExport: function(jobs, outputPath, fps, crf, audioJob, waveDataUrl) {
+  nativeExport: function(jobs, outputPath, fps, crf, audioJob, overlayData) {
     return ipcRenderer.invoke('native-export', {
       jobs: jobs,
       outputPath: outputPath,
       fps: fps,
       crf: crf,
       audioJob: audioJob,
-      waveDataUrl: waveDataUrl
+      overlayData: overlayData
     });
   },
   onExportProgress: function(callback) {

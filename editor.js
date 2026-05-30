@@ -4966,6 +4966,13 @@ function toggleStickerVisibility(id){
   }
 
   // ── draw badge frame on canvas ──
+  window._drawBadgeToCtx = function(targetCtx, item, dx, dy, dw, dh){
+    var tmp = document.createElement('canvas');
+    tmp.width = Math.max(2, Math.floor(dw));
+    tmp.height = Math.max(2, Math.floor(dh));
+    drawBadgeFrame(tmp, item.badgeStyle, item.badgeColor, item.opacity!==undefined?item.opacity:1, item.badgeText, item.badgeTxtColor, item.badgeFontSize);
+    try{ targetCtx.drawImage(tmp, dx, dy, dw, dh); }catch(e){}
+  };
   function drawBadgeFrame(canvas, styleId, color, alpha, text, txtColor, fontSize){
     var ctx = canvas.getContext('2d');
     var W = canvas.width, H = canvas.height;
@@ -5319,17 +5326,20 @@ function toggleStickerVisibility(id){
         }
       }
     }
-    var waveUrl=null;
-    if(window.S_WAVES&&window.S_WAVES.length>0){
-      eps.textContent='〰️ render waveform...';
-      waveUrl=buildWaveOverlayPNG(tw,th,0,99999);
+    // สร้าง overlay frames (waveform animated + sticker/badge)
+    var totalDur = 0;
+    for(var td=0; td<jobs.length; td++){ totalDur += jobs[td].dur; }
+    var overlayData = null;
+    if((window.S_WAVES&&window.S_WAVES.length>0) || (typeof STK!=='undefined'&&STK.items&&STK.items.length>0)){
+      eps.textContent='〰️ render waveform + โลโก้...';
+      overlayData = await buildNativeOverlayFrames(tw, th, totalDur);
     }
     window.electronAPI.onExportProgress(function(d){
       if(d.pct!==undefined) epf.style.width=d.pct+'%';
       if(d.msg) eps.textContent='⚡ '+d.msg;
     });
     eps.textContent='⚡ Native Export กำลังรัน...';
-    var result=await window.electronAPI.nativeExport(jobs,pathRes.filePath,fps,crf,audioJob,waveUrl);
+    var result=await window.electronAPI.nativeExport(jobs,pathRes.filePath,fps,crf,audioJob,overlayData);
     window.electronAPI.removeExportProgress();
     btn.disabled=false; btn.textContent='⚡ Native Export';
     if(result.ok){
@@ -5343,3 +5353,108 @@ function toggleStickerVisibility(id){
     }
   });
 })();
+
+// ══════════════════════════════════════════════════════
+// สร้าง overlay frames (waveform animated + sticker/badge) สำหรับ Native Export
+// คืน array ของ dataURL PNG (1 ต่อเฟรม) + fps
+// ══════════════════════════════════════════════════════
+async function buildNativeOverlayFrames(tw, th, totalDurSec){
+  var hasWave = (window.S_WAVES && window.S_WAVES.length > 0);
+  var hasStk  = (typeof STK !== 'undefined' && STK.items && STK.items.length > 0);
+  if(!hasWave && !hasStk) return null;
+
+  // preload sticker images (เฉพาะ image type)
+  if(hasStk){
+    await Promise.all(STK.items.map(function(item){
+      if(item.type === 'badge' || item.type === 'video' || !item.url) return Promise.resolve();
+      return new Promise(function(resolve){
+        var img = new Image();
+        img.onload = function(){ item._imgEl = img; resolve(); };
+        img.onerror = function(){ resolve(); };
+        img.src = item.url;
+      });
+    }));
+  }
+
+  var wFPS = 12; // 12fps พอลื่นและไฟล์ไม่ใหญ่
+  var totalFrames = Math.min(Math.ceil(totalDurSec * wFPS), 720);
+
+  // เตรียม wave info
+  var waveInfos = [];
+  if(hasWave){
+    waveInfos = window.S_WAVES.map(function(clip){
+      var style = WAVE_STYLES.find(function(s){return s.id===clip.styleId;})||WAVE_STYLES[0];
+      var px=clip.pvX!==undefined?clip.pvX:5, py=clip.pvY!==undefined?clip.pvY:75;
+      var pw=clip.pvW!==undefined?clip.pvW:90, ph2=clip.pvH!==undefined?clip.pvH:15;
+      var x=Math.floor(px/100*tw), y=Math.floor(py/100*th);
+      var w=Math.max(10,Math.floor(pw/100*tw)), h=Math.max(4,Math.floor(ph2/100*th));
+      var nBars=Math.max(20,Math.floor(w/5));
+      return {style:style, x:x, y:y, w:w, h:h, nBars:nBars,
+              data:genWaveData(nBars, clip.seed||1),
+              sens:clip.sensitivity!==undefined?clip.sensitivity:1.0,
+              shape:clip.shapeMode||'natural',
+              startSec:clip.startSec||0, dur:clip.dur||totalDurSec};
+    });
+  }
+
+  // เตรียม sticker images (โหลดเป็น Image ล่วงหน้า)
+  function shapeEnv(shape, pos){
+    if(shape==='natural')    return Math.pow(1-pos*0.55,0.7)+0.15;
+    if(shape==='rise')       return 0.3+pos*0.7;
+    if(shape==='fall')       return 1-pos*0.7;
+    if(shape==='mountain')   return 0.3+Math.sin(pos*Math.PI)*0.7;
+    if(shape==='valley')     return 0.3+(1-Math.sin(pos*Math.PI))*0.7;
+    return 1;
+  }
+
+  var cv = document.createElement('canvas');
+  cv.width = tw; cv.height = th;
+  var ctx = cv.getContext('2d');
+
+  var frames = [];
+  for(var fi=0; fi<totalFrames; fi++){
+    var tSec = fi / wFPS;
+    // พื้นดำ (ใช้ colorkey ลบทีหลัง)
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0,0,tw,th);
+
+    // วาด waveform
+    waveInfos.forEach(function(wi){
+      if(tSec < wi.startSec || tSec > wi.startSec+wi.dur) return;
+      var phase = tSec * 8;
+      var bars = wi.data.map(function(base, idx){
+        var pos = idx / Math.max(1, wi.nBars-1);
+        var env = shapeEnv(wi.shape, pos);
+        var wave = Math.sin(phase + idx*0.42)*0.35 + Math.sin(phase*1.7 + idx*0.18)*0.2 + Math.sin(phase*0.6 + idx*0.73)*0.15;
+        return Math.max(0.04, Math.min(1, (base*0.4 + wave*0.6 + 0.1) * wi.sens * env));
+      });
+      var sub = document.createElement('canvas');
+      sub.width = wi.w; sub.height = wi.h;
+      drawWaveAnimated(sub, wi.style, wi.data, 0, bars);
+      ctx.drawImage(sub, wi.x, wi.y, wi.w, wi.h);
+    });
+
+    // วาด sticker / badge (static ตาม STK)
+    if(hasStk){
+      STK.items.forEach(function(item){
+        if(item.hidden) return;
+        var sx = item.x/100*tw, sy = item.y/100*th;
+        var sw = item.w/100*tw, sh = item.h/100*th;
+        ctx.globalAlpha = item.opacity!==undefined?item.opacity:1;
+        if(item.type === 'badge'){
+          // วาด badge ผ่าน drawBadgeFrame ถ้ามี
+          if(typeof window._drawBadgeToCtx === 'function'){
+            window._drawBadgeToCtx(ctx, item, sx, sy, sw, sh);
+          }
+        } else if(item._imgEl && item._imgEl.complete){
+          try{ ctx.drawImage(item._imgEl, sx, sy, sw, sh); }catch(e){}
+        }
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    frames.push(cv.toDataURL('image/png'));
+  }
+
+  return { frames: frames, fps: wFPS };
+}
