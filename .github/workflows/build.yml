@@ -17,10 +17,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build Windows installer
         run: npm run build:win
@@ -44,10 +43,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build Linux AppImage
         run: npm run build:linux
@@ -75,15 +73,7 @@ jobs:
           name: "สุ่มเสียง VIDEOCUT ${{ github.ref_name }}"
           body: |
             ## 🎬 สุ่มเสียง VIDEOCUT ${{ github.ref_name }}
-
-            ### ดาวน์โหลด
-            | ระบบ | ไฟล์ |
-            |---|---|
-            | 🪟 Windows 10/11 | `.exe` |
-            | 🐧 Linux | `.AppImage` |
-
-            ### วิธีติดตั้ง Windows
-            ดาวน์โหลด `.exe` แล้วดับเบิลคลิกรันได้เลย
+            ดาวน์โหลด .exe สำหรับ Windows หรือ .AppImage สำหรับ Linux
           files: |
             windows-installer/*.exe
             linux-appimage/*.AppImage
