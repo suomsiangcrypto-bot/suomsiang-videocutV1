@@ -3395,46 +3395,36 @@ document.getElementById('exp-go').addEventListener('click', async function(){
     var blob=new Blob([finalBuf],{type:mimeMap[outExt]||'video/mp4'});
     var fname=(document.getElementById('exp-name').value||'suomsiang')+'.'+outExt;
 
-    // วิธีดาวน์โหลด: Electron ใช้ native dialog / Browser ใช้ <a> click
-    var _isElectron = (typeof window.electronAPI !== 'undefined' && window.electronAPI.isElectron);
-
+    // วิธีดาวน์โหลดที่ทำงานได้ใน Chrome Extension (MV3)
     function triggerDownload(){
-      if(_isElectron){
-        // Electron: แปลง blob → ArrayBuffer แล้วส่ง main process บันทึกผ่าน dialog
-        blob.arrayBuffer().then(function(ab){
-          window.electronAPI.saveFile(fname, ab).then(function(res){
-            if(res.ok){
-              eps.textContent = '✅ บันทึกแล้วที่: ' + res.filePath;
-              showToast('💾 บันทึกสำเร็จ!');
-              window.electronAPI.showFile(res.filePath);
-            } else {
-              if(res.error) showToast('❌ ' + res.error);
-            }
-          });
-        });
-        return;
-      }
-      // Browser / Chrome Extension: ใช้ <a> click
+      // ลอง chrome.downloads API ก่อน (ต้องการ permission "downloads")
+      // ถ้าไม่มี ใช้ <a> click แทน
       var dlUrl = URL.createObjectURL(blob);
       var a = document.createElement('a');
-      a.href = dlUrl; a.download = fname;
+      a.href = dlUrl;
+      a.download = fname;
       a.style.display = 'none';
-      document.body.appendChild(a); a.click();
-      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(dlUrl); }, 5000);
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){
+        document.body.removeChild(a);
+        URL.revokeObjectURL(dlUrl);
+      }, 5000);
     }
 
-    // อัปเดต dl button ให้ใช้ blob ใหม่ทุกครั้งที่กด
+    // อัปเดต dl button ให้ใช้ blob ใหม่ทุกครั้งที่กด (กัน URL หมดอายุ)
     var _lastBlob = blob;
     var _lastFname = fname;
     dl.href = '#';
     dl.onclick = function(e){
       e.preventDefault();
-      if(_isElectron){ triggerDownload(); return; }
       var freshUrl = URL.createObjectURL(_lastBlob);
       var a2 = document.createElement('a');
-      a2.href = freshUrl; a2.download = _lastFname;
+      a2.href = freshUrl;
+      a2.download = _lastFname;
       a2.style.display = 'none';
-      document.body.appendChild(a2); a2.click();
+      document.body.appendChild(a2);
+      a2.click();
       setTimeout(function(){ document.body.removeChild(a2); URL.revokeObjectURL(freshUrl); }, 5000);
     };
     dl.download = fname;
@@ -3483,17 +3473,11 @@ async function loadFFmpeg(){
     if(!FFLib || !FFLib.createFFmpeg)
       throw new Error('window.FFmpeg ไม่พบ');
 
-    // detect environment: Electron, Chrome Extension, or Browser
-    var _isElectronEnv = (typeof window.electronAPI !== 'undefined' && window.electronAPI.isElectron);
+    var _isElec = (typeof window.electronAPI !== 'undefined' && window.electronAPI.isElectron);
     var base;
-    if(_isElectronEnv){
-      // Electron: ไฟล์อยู่ใน app directory เดียวกับ editor.html
-      base = './';
-    } else if(typeof chrome!=='undefined' && chrome.runtime && chrome.runtime.getURL){
-      base = chrome.runtime.getURL('');
-    } else {
-      base = location.origin + location.pathname.replace(/[^/]*$/, '');
-    }
+    if(_isElec){ base = './'; }
+    else if(typeof chrome!=='undefined' && chrome.runtime && chrome.runtime.getURL){ base = chrome.runtime.getURL(''); }
+    else { base = location.origin + location.pathname.replace(/[^/]*$/, ''); }
 
     // URL ของไฟล์ใน extension — chrome.runtime.getURL ทำให้ worker importScripts ได้
     var coreUrl   = base + 'ffmpeg-core.js';
@@ -3640,9 +3624,8 @@ function showToast(msg){var t=document.getElementById('toast');t.textContent=msg
 // INIT
 drawRuler();
 // ตรวจว่าเปิดจาก file:// หรือไม่
-// Electron ใช้ file:// แต่ทำงานได้ปกติ — ไม่แสดง warning
-var _isElectronApp = (typeof window.electronAPI !== 'undefined' && window.electronAPI.isElectron);
-if(window.location.protocol==='file:' && !_isElectronApp){
+var _isElectronEnv = (typeof window.electronAPI !== 'undefined' && window.electronAPI.isElectron);
+if(window.location.protocol==='file:' && !_isElectronEnv){
   var lw=document.getElementById('localhost-warn');
   if(lw){
     lw.style.display='flex';
@@ -5284,123 +5267,79 @@ function toggleStickerVisibility(id){
 })();
 
 
-// ══════════════════════════════════════════════════════
-// ⚡ NATIVE EXPORT — ใช้ ffmpeg binary แทน WASM (เร็วกว่า 10-50x)
-// ══════════════════════════════════════════════════════
+// ⚡ NATIVE EXPORT
 (function(){
   var btn = document.getElementById('exp-native');
   if(!btn) return;
-
-  // แสดงปุ่มเฉพาะใน Electron
   if(typeof window.electronAPI !== 'undefined' && window.electronAPI.isElectron){
     btn.style.display = '';
   }
-
   btn.addEventListener('click', async function(){
     buildQueue();
     if(!playQueue.length){ showToast('⚠️ ลากวิดีโอมาใส่ไทม์ไลน์ก่อน'); return; }
-
-    // เลือก output path ก่อน
-    var fname = (document.getElementById('exp-name').value || 'suomsiang_output') + '.mp4';
+    var fname = (document.getElementById('exp-name').value||'suomsiang_output') + '.mp4';
     var pathRes = await window.electronAPI.chooseExportPath(fname);
     if(!pathRes.ok) return;
-    var outputPath = pathRes.filePath;
-
-    btn.disabled = true; btn.textContent = '⚡ กำลัง export...';
-    var epw = document.getElementById('ep-wrap'); epw.style.display = 'block';
-    var epf = document.getElementById('ep-fill'); epf.style.width = '0';
-    var eps = document.getElementById('ep-stat');
-
-    // ดึง resolution
-    var resEl = document.querySelector('.em-res.on');
-    var res = resEl ? resEl.dataset.eres : '1280x720';
-    var earEl = document.querySelector('.em-ar.on');
-    var ear = earEl ? earEl.dataset.ear : '16:9';
-    var resParts = (res||'1280x720').split('x');
-    var tw = parseInt(resParts[0])||1280;
-    var th = parseInt(resParts[1])||720;
-    if(ear==='9:16'||ear==='4:5'){ var tmp=tw; tw=th; th=tmp; }
-    if(tw%2!==0) tw--; if(th%2!==0) th--;
-
-    var crf = document.getElementById('exp-q') ? parseInt(document.getElementById('exp-q').value)||23 : 23;
-    var fps = document.getElementById('exp-fps') ? parseInt(document.getElementById('exp-fps').value)||30 : 30;
-    var ps = pxSec();
-
-    // ฟัง progress
-    window.electronAPI.onExportProgress(function(data){
-      if(data.pct !== undefined) epf.style.width = data.pct + '%';
-      if(data.msg) eps.textContent = '⚡ ' + data.msg;
-      else if(data.step !== undefined) eps.textContent = '⚡ encode (' + (data.step+1) + '/' + data.total + ')...';
-    });
-
-    // เตรียม jobs — อ่านไฟล์เป็น ArrayBuffer
-    var jobs = [];
-    for(var i=0; i<playQueue.length; i++){
-      var qItem = playQueue[i];
-      var entry = qItem.entry;
-      var c = qItem.c;
-      var ext = '.' + (entry.file.name.split('.').pop().toLowerCase() || 'mp4');
-      var isImage = entry.type === 'image';
-
-      eps.textContent = '📂 อ่านไฟล์ (' + (i+1) + '/' + playQueue.length + ')...';
-      epf.style.width = Math.round(i/playQueue.length*20) + '%';
-
-      var ab = await entry.file.arrayBuffer();
-
-      var tIn = c.tIn !== undefined ? c.tIn : 0;
-      var clipDur = c.w / ps;
-      var vf = 'scale='+tw+':'+th+':force_original_aspect_ratio=decrease,pad='+tw+':'+th+':(ow-iw)/2:(oh-ih)/2:black,setsar=1';
-
-      jobs.push({
-        data: ab, ext: ext, isImage: isImage,
-        tIn: tIn, dur: clipDur, tw: tw, th: th, vf: vf
-      });
+    btn.disabled=true; btn.textContent='⚡ กำลัง export...';
+    var epw=document.getElementById('ep-wrap'); epw.style.display='block';
+    var epf=document.getElementById('ep-fill'); epf.style.width='0';
+    var eps=document.getElementById('ep-stat');
+    var resEl=document.querySelector('.em-res.on');
+    var res=resEl?resEl.dataset.eres:'1280x720';
+    var earEl=document.querySelector('.em-ar.on');
+    var ear=earEl?earEl.dataset.ear:'16:9';
+    var rp=(res||'1280x720').split('x');
+    var tw=parseInt(rp[0])||1280, th=parseInt(rp[1])||720;
+    if(ear==='9:16'||ear==='4:5'){var tmp=tw;tw=th;th=tmp;}
+    if(tw%2!==0)tw--; if(th%2!==0)th--;
+    var crf=23, fps=30;
+    var ps=pxSec();
+    var jobs=[];
+    for(var i=0;i<playQueue.length;i++){
+      var qItem=playQueue[i], entry=qItem.entry, c=qItem.c;
+      var ext='.'+((entry.file.name.split('.').pop()||'mp4').toLowerCase());
+      eps.textContent='📂 อ่านไฟล์ ('+(i+1)+'/'+playQueue.length+')...';
+      epf.style.width=Math.round(i/playQueue.length*20)+'%';
+      var ab=await entry.file.arrayBuffer();
+      var tIn=c.tIn!==undefined?c.tIn:0;
+      var dur=c.w/ps;
+      var vf='scale='+tw+':'+th+':force_original_aspect_ratio=decrease,pad='+tw+':'+th+':(ow-iw)/2:(oh-ih)/2:black,setsar=1';
+      jobs.push({data:ab,ext:ext,isImage:entry.type==='image',tIn:tIn,dur:dur,tw:tw,th:th,vf:vf});
     }
-
-    eps.textContent = '📂 อ่านไฟล์เสียง...';
-
-    // ── เตรียม audio file (bgAudio track) ──
-    var audioJob = null;
-    var ps2 = pxSec();
-    var audioClips = Array.from(document.getElementById('tr-a').querySelectorAll('.clip'));
-    if(audioClips.length > 0){
-      var aEl = audioClips[0];
-      var aCid = aEl.dataset.cid;
-      var aC = S.clips[aCid];
+    var audioJob=null;
+    var aClips=Array.from(document.getElementById('tr-a').querySelectorAll('.clip'));
+    if(aClips.length>0){
+      var aC=S.clips[aClips[0].dataset.cid];
       if(aC){
-        var aEntry = S.files.find(function(f){ return f.id === aC.fid; });
-        if(aEntry && aEntry.file){
-          var aAb = await aEntry.file.arrayBuffer();
-          var aExt = '.' + (aEntry.file.name.split('.').pop().toLowerCase() || 'mp3');
-          var aStart = (aC.startSec !== undefined) ? aC.startSec : (aC.left/ps2);
-          var tInA = aC.tIn || 0;
-          audioJob = { data: aAb, ext: aExt, startSec: aStart, tIn: tInA };
+        var aEntry=S.files.find(function(f){return f.id===aC.fid;});
+        if(aEntry&&aEntry.file){
+          var aAb=await aEntry.file.arrayBuffer();
+          audioJob={data:aAb,ext:'.'+((aEntry.file.name.split('.').pop()||'mp3').toLowerCase()),
+            startSec:(aC.startSec!==undefined?aC.startSec:aC.left/ps),tIn:aC.tIn||0};
         }
       }
     }
-
-    // ── เตรียม waveform overlay PNG ──
-    var waveDataUrl = null;
-    if(window.S_WAVES && window.S_WAVES.length > 0){
-      eps.textContent = '〰️ render waveform...';
-      waveDataUrl = buildWaveOverlayPNG(tw, th, 0, 99999);
+    var waveUrl=null;
+    if(window.S_WAVES&&window.S_WAVES.length>0){
+      eps.textContent='〰️ render waveform...';
+      waveUrl=buildWaveOverlayPNG(tw,th,0,99999);
     }
-
-    eps.textContent = '⚡ เริ่ม Native Export...';
-
-    var result = await window.electronAPI.nativeExport(jobs, outputPath, fps, crf, audioJob, waveDataUrl);
-
+    window.electronAPI.onExportProgress(function(d){
+      if(d.pct!==undefined) epf.style.width=d.pct+'%';
+      if(d.msg) eps.textContent='⚡ '+d.msg;
+    });
+    eps.textContent='⚡ Native Export กำลังรัน...';
+    var result=await window.electronAPI.nativeExport(jobs,pathRes.filePath,fps,crf,audioJob,waveUrl);
     window.electronAPI.removeExportProgress();
-    btn.disabled = false; btn.textContent = '⚡ Native Export (เร็ว)';
-
+    btn.disabled=false; btn.textContent='⚡ Native Export';
     if(result.ok){
-      epf.style.width = '100%';
-      eps.textContent = '✅ บันทึกแล้วที่: ' + result.filePath;
-      showToast('🎉 Export สำเร็จ! ⚡ Native FFmpeg');
+      epf.style.width='100%';
+      eps.textContent='✅ บันทึกแล้ว: '+result.filePath;
+      showToast('🎉 Export สำเร็จ!');
       window.electronAPI.showFile(result.filePath);
     } else {
-      eps.textContent = '❌ ' + result.error;
-      showToast('❌ Export ไม่สำเร็จ: ' + (result.error||'').substring(0,50));
+      eps.textContent='❌ '+result.error;
+      showToast('❌ '+(result.error||'').substring(0,60));
     }
   });
 })();
