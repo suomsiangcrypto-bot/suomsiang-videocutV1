@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "สุ่มเสียง VIDEOCUT",
+  "version": "4.0.0",
+  "description": "ตัดต่อวิดีโอ รวมคลิป ส่งออก MP4",
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "สุ่มเสียง VIDEOCUT"
+  },
+  "options_ui": {
+    "page": "editor.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["ffmpeg-core.js", "ffmpeg-core.wasm", "ffmpeg-core.worker.js", "ffmpeg.min.js", "editor.html", "editor.js", "icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "permissions": ["storage", "downloads"]
+}

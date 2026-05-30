@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>สุ่มเสียง VIDEOCUT</title>
+<link rel="icon" type="image/png" href="icons/icon128.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#111;--sb:#1a1a1a;--panel:#1e1e1e;--p2:#252525;--p3:#2e2e2e;
+  --bd:#2a2a2a;--bd2:#3a3a3a;
+  --acc:#f5c518;--tx:#e8e8e8;--tx2:#888;--tx3:#555;
+  --red:#e53e3e;--grn:#22c55e;
+}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',sans-serif;font-size:13px;display:flex;flex-direction:column;}
+
+/* TOP */
+#top{height:48px;background:var(--sb);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}
+.logo-ico{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#ff6af0,#a855f7,#3b82f6);display:flex;align-items:center;justify-content:center;}
+.logo-ico svg{width:14px;height:14px;}
+.logo-txt{font-weight:900;font-size:13px;background:linear-gradient(90deg,#ff6af0,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.proj{font-size:12px;color:var(--tx2);}
+.proj b{color:var(--tx);}
+.sp{flex:1;}
+.hbtn{background:none;border:1px solid var(--bd2);color:var(--tx2);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s;}
+.hbtn:hover{border-color:var(--acc);color:var(--acc);}
+.hbtn.ico{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;}
+.exp-btn{background:var(--acc);color:#000;border:none;padding:7px 18px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;}
+.exp-btn:hover{filter:brightness(1.1);}
+
+/* MAIN */
+#main{display:flex;flex:1;overflow:hidden;}
+
+/* IBAR */
+#ibar{width:56px;background:var(--sb);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;flex-shrink:0;}
+.ib{width:44px;padding:7px 3px;border-radius:7px;cursor:pointer;text-align:center;border:1px solid transparent;transition:all .15s;}
+.ib:hover,.ib.on{background:var(--p2);border-color:var(--acc);}
+.ib-ico{font-size:17px;display:block;margin-bottom:2px;}
+.ib-lbl{font-size:9px;color:var(--tx2);}
+.ib.on .ib-lbl{color:var(--acc);}
+.ib-hr{width:30px;height:1px;background:var(--bd);margin:5px 0;}
+
+/* LEFT */
+#lpanel{width:260px;background:var(--sb);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.lp-tabs{display:flex;border-bottom:1px solid var(--bd);padding:8px 10px 0;}
+.lp-tab{padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);border-bottom:2px solid transparent;}
+.lp-tab.on{color:var(--tx);border-bottom-color:var(--acc);}
+.lp-body{flex:1;overflow-y:auto;padding:10px;}
+.dz{border:2px dashed var(--bd2);border-radius:10px;padding:18px 12px;text-align:center;cursor:pointer;margin-bottom:10px;transition:all .2s;}
+.dz:hover,.dz.ov{border-color:var(--acc);background:rgba(245,197,24,.05);}
+.dz-h{font-size:13px;font-weight:600;margin:6px 0 3px;}
+.dz-s{font-size:11px;color:var(--tx2);}
+.dz-fmts{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+.dz-f{background:var(--p2);border:1px solid var(--bd2);padding:2px 7px;border-radius:8px;font-size:10px;color:var(--tx2);}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin:8px 2px 5px;}
+.ml-item{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:7px;cursor:pointer;border:1px solid transparent;margin-bottom:3px;}
+.ml-item:hover{background:var(--p2);border-color:var(--bd2);}
+.ml-item.active{border-color:var(--acc);background:rgba(245,197,24,.06);}
+.ml-thumb{width:50px;height:32px;border-radius:4px;overflow:hidden;background:#111;flex-shrink:0;}
+.ml-thumb video{width:100%;height:100%;object-fit:cover;}
+.ml-info{flex:1;min-width:0;}
+.ml-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ml-dur{font-size:10px;color:var(--tx2);}
+.ml-acts{display:flex;gap:2px;opacity:0;}
+.ml-item:hover .ml-acts{opacity:1;}
+.ml-act{width:20px;height:20px;border-radius:4px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.ml-act:hover{border-color:var(--acc);color:var(--acc);}
+.ml-act.del:hover{border-color:var(--red);color:var(--red);}
+/* Tool list */
+.trow{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:3px;}
+.trow:hover{background:var(--p2);border-color:var(--bd2);}
+.trow-ico{font-size:16px;width:24px;text-align:center;}
+.trow-name{font-size:12px;font-weight:600;}
+.trow-desc{font-size:10px;color:var(--tx2);margin-top:1px;}
+.trow-arr{margin-left:auto;color:var(--tx3);}
+/* sub panel */
+.sub{display:none;padding:10px 12px;border-top:1px solid var(--bd);}
+.sub-title{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.sub-close{background:none;border:none;color:var(--tx2);cursor:pointer;font-size:13px;}
+.sub-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.sub-lbl{font-size:11px;color:var(--tx2);width:56px;flex-shrink:0;}
+.sub-val{font-size:11px;font-weight:700;color:var(--acc);min-width:38px;text-align:right;font-family:monospace;}
+input[type=range]{flex:1;accent-color:var(--acc);}
+input[type=checkbox]{accent-color:var(--acc);}
+.sub-btns{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;}
+.sub-btn{padding:5px 10px;border:1px solid var(--bd2);background:none;color:var(--tx2);border-radius:6px;font-size:11px;cursor:pointer;transition:all .12s;}
+.sub-btn:hover{border-color:var(--acc);color:var(--acc);}
+.ar-grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;}
+.ar-card{background:var(--p2);border:1.5px solid var(--bd2);border-radius:7px;padding:8px 5px;text-align:center;cursor:pointer;transition:all .15s;}
+.ar-card:hover,.ar-card.on{border-color:var(--acc);background:rgba(245,197,24,.08);}
+.ar-card .an{font-size:10px;font-weight:700;color:var(--tx2);}
+.ar-card.on .an{color:var(--acc);}
+.ar-card .ap{font-size:9px;color:var(--tx3);}
+
+/* CENTER */
+#center{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;}
+#prev-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#0d0d0d;}
+#prev-empty{text-align:center;color:var(--tx3);pointer-events:none;}
+#prev-empty-ico{font-size:54px;opacity:.2;margin-bottom:12px;}
+#prev-empty-txt{font-size:14px;opacity:.25;}
+#prev-wrap{display:none;position:relative;cursor:default;overflow:hidden;transition:width .2s ease,height .2s ease;}
+#prev-vid{display:block;background:#000;transition:width .2s ease,height .2s ease;}
+
+/* CROP OVERLAY */
+#crop-ov{position:absolute;inset:0;display:none;pointer-events:none;}
+#crop-ov.active{display:block;pointer-events:all;}
+#crop-shade{position:absolute;inset:0;background:rgba(0,0,0,.55);}
+#crop-box{position:absolute;border:2px solid var(--acc);cursor:move;pointer-events:all;}
+#crop-box::after{content:'';position:absolute;inset:0;box-shadow:0 0 0 9999px rgba(0,0,0,.55);}
+.ch{position:absolute;width:13px;height:13px;background:var(--acc);border-radius:2px;z-index:10;}
+.ch.tl{top:-6px;left:-6px;cursor:nw-resize;}
+.ch.tc{top:-6px;left:50%;transform:translateX(-50%);cursor:n-resize;}
+.ch.tr{top:-6px;right:-6px;cursor:ne-resize;}
+.ch.ml{left:-6px;top:50%;transform:translateY(-50%);cursor:w-resize;}
+.ch.mr{right:-6px;top:50%;transform:translateY(-50%);cursor:e-resize;}
+.ch.bl{bottom:-6px;left:-6px;cursor:sw-resize;}
+.ch.bc{bottom:-6px;left:50%;transform:translateX(-50%);cursor:s-resize;}
+.ch.br{bottom:-6px;right:-6px;cursor:se-resize;}
+
+/* tc badge */
+#tc-badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.75);color:#fff;font-family:monospace;font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;pointer-events:none;}
+
+/* PLAYBAR */
+#pb{height:50px;background:var(--panel);border-top:1px solid var(--bd);display:flex;align-items:center;gap:6px;padding:0 12px;flex-shrink:0;}
+.pbc{width:30px;height:30px;background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.pbc:hover{border-color:var(--acc);color:var(--acc);}
+.pbc.play{width:38px;height:38px;font-size:17px;border-radius:50%;}
+.pbc.play.on{background:var(--acc);border-color:var(--acc);color:#000;}
+.pb-tc{font-family:monospace;font-size:13px;font-weight:700;color:var(--tx);min-width:120px;text-align:center;}
+.pb-sep{width:1px;height:22px;background:var(--bd2);margin:0 3px;}
+.pb-zoom{display:flex;align-items:center;gap:5px;margin-left:auto;}
+.pb-zl{font-size:11px;color:var(--tx2);min-width:34px;text-align:center;}
+
+/* TIMELINE */
+#tl{height:300px;background:#0d0d0d;border-top:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;}
+#tl-bar{height:44px;background:var(--panel);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 10px;gap:6px;}
+.tlb{width:32px;height:32px;background:none;border:1px solid var(--bd2);color:var(--tx2);border-radius:6px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.tlb:hover{border-color:var(--acc);color:var(--acc);}
+.tlb.on{background:var(--acc);border-color:var(--acc);color:#000;}
+.tlb.red:hover{border-color:var(--red);color:var(--red);}
+.tl-sep{width:1px;height:22px;background:var(--bd2);}
+.tl-sp{flex:1;}
+
+#tl-content{flex:1;display:flex;overflow:hidden;}
+#tl-lbls{width:86px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding-top:20px;overflow-y:auto;overflow-x:hidden;position:relative;z-index:10;}
+.tl-lbl{height:54px;display:flex;align-items:center;padding:0 7px;font-size:10px;color:var(--tx2);border-bottom:1px solid var(--bd);flex-direction:column;justify-content:center;gap:2px;}
+
+#tl-scroll{flex:1;overflow-x:auto;overflow-y:auto;position:relative;cursor:default;}
+#tl-inner{position:relative;min-height:100%;}
+canvas#ruler-c{display:block;cursor:ew-resize;user-select:none;}
+.tl-tracks{position:relative;}
+.tl-track{height:54px;border-bottom:1px solid var(--bd);position:relative;}
+.tl-track.vt{background:#0a1020;overflow:visible;position:relative;}
+.tl-track.at{background:#0a1808;position:relative;}
+.tl-track.ft{background:#180a08;min-height:54px;position:relative;overflow:visible;}
+.tl-track.drag-over{background:rgba(245,197,24,.12);outline:2px dashed var(--acc);}
+.audio-drop-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);pointer-events:none;letter-spacing:.02em;}
+/* Audio clip — สีเขียว */
+.clip.ac{background:linear-gradient(180deg,#0f3020,#0a2010);}
+.clip.ac .clip-name{color:rgba(134,239,172,.9);}
+/* วงกลม mute button ในคลิป */
+.clip-mute{position:absolute;top:3px;right:20px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;z-index:6;transition:all .15s;}
+.clip-mute:hover{background:rgba(239,68,68,.7);border-color:var(--red);}
+.clip-mute.muted{background:rgba(239,68,68,.8);border-color:var(--red);}
+/* waveform bar in audio clip */
+.clip-wave{position:absolute;bottom:4px;left:6px;right:20px;height:10px;display:flex;align-items:center;gap:1px;overflow:hidden;pointer-events:none;opacity:.5;}
+/* Text Editor UI */
+.txt-preset-btn{background:var(--p2);border:1px solid var(--bd2);color:var(--tx2);padding:7px 6px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;}
+.txt-preset-btn:hover{border-color:var(--acc);color:var(--acc);}
+.txt-style-btn{background:var(--p2);border:1.5px solid var(--bd2);color:var(--tx2);padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;flex:1;}
+.txt-style-btn:hover,.txt-style-btn.on{border-color:var(--acc);color:var(--acc);background:rgba(245,197,24,.1);}
+.txt-align-btn{background:var(--p2);border:1.5px solid var(--bd2);color:var(--tx2);padding:5px;border-radius:6px;font-size:14px;cursor:pointer;flex:1;text-align:center;transition:all .15s;}
+.txt-align-btn:hover,.txt-align-btn.on{border-color:var(--acc);color:var(--acc);}
+.font-badge{background:var(--p2);border:1px solid var(--bd2);padding:3px 8px;border-radius:5px;font-size:10px;color:var(--tx2);cursor:pointer;}
+.font-badge.on{border-color:var(--acc);color:var(--acc);}
+/* Text overlay elements on preview */
+.txt-overlay{position:absolute;cursor:move;user-select:none;padding:4px 8px;border-radius:4px;border:1.5px solid transparent;line-height:1.3;white-space:pre-wrap;word-break:break-word;min-width:40px;min-height:20px;}
+.txt-overlay:hover{border-color:rgba(245,197,24,.5);}
+.txt-overlay.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc);}
+/* resize handles on selected text */
+.txt-hdl{position:absolute;width:9px;height:9px;background:var(--acc);border-radius:2px;border:1px solid #000;z-index:20;cursor:se-resize;}
+/* text layer item */
+.txt-layer-item{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;border:1px solid var(--bd2);margin-bottom:4px;background:var(--p2);cursor:pointer;}
+.txt-layer-item:hover{border-color:var(--acc);}
+.txt-layer-item.on{border-color:var(--acc);background:rgba(245,197,24,.07);}
+.txt-layer-preview{flex:1;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.txt-layer-del{width:18px;height:18px;border-radius:4px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.txt-layer-del:hover{border-color:var(--red);color:var(--red);}
+#txt-overlay-container{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.fx-trans-card{background:var(--p2);border:1.5px solid var(--bd2);border-radius:8px;padding:8px 5px;text-align:center;cursor:grab;transition:all .15s;user-select:none;}
+.fx-trans-card:hover{border-color:var(--acc);transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,197,24,.2);}
+.fx-trans-card.dragging{opacity:.5;}
+.fx-trans-ico{font-size:22px;display:block;margin-bottom:4px;}
+.fx-trans-name{font-size:10px;font-weight:700;color:var(--tx);}
+.fx-trans-desc{font-size:9px;color:var(--tx3);margin-top:2px;}
+/* Snap / Join marker between clips */
+.snap-marker{position:absolute;top:0;bottom:0;width:24px;transform:translateX(-50%);z-index:99;display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:all;}
+.snap-dot{width:20px;height:20px;border-radius:50%;background:var(--p2);border:2px solid var(--acc);color:var(--acc);font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(245,197,24,.4);transition:all .15s;line-height:1;}
+.snap-marker:hover .snap-dot{background:var(--acc);color:#000;transform:scale(1.3);box-shadow:0 0 16px rgba(245,197,24,.8);}
+.snap-marker.has-trans .snap-dot{background:#22c55e;border-color:#22c55e;color:#000;}
+/* Preview inner-frame resize overlay */
+#pif-overlay{position:absolute;inset:0;pointer-events:none;display:none;z-index:15;}
+#pif-overlay.on{display:block;pointer-events:all;}
+#pif-frame{position:absolute;border:2px solid var(--acc);box-shadow:0 0 0 1px rgba(245,197,24,.3),inset 0 0 0 1px rgba(245,197,24,.1);cursor:move;}
+.pif-hdl{position:absolute;width:12px;height:12px;background:var(--acc);border-radius:2px;border:1.5px solid #000;pointer-events:all;z-index:16;}
+.pif-hdl.tl{top:-6px;left:-6px;cursor:nw-resize;}.pif-hdl.tc{top:-6px;left:calc(50% - 6px);cursor:n-resize;}
+.pif-hdl.tr{top:-6px;right:-6px;cursor:ne-resize;}.pif-hdl.ml{top:calc(50% - 6px);left:-6px;cursor:w-resize;}
+.pif-hdl.mr{top:calc(50% - 6px);right:-6px;cursor:e-resize;}.pif-hdl.bl{bottom:-6px;left:-6px;cursor:sw-resize;}
+.pif-hdl.bc{bottom:-6px;left:calc(50% - 6px);cursor:s-resize;}.pif-hdl.br{bottom:-6px;right:-6px;cursor:se-resize;}
+#pif-label{position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:var(--acc);font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;pointer-events:none;}
+
+/* CLIPS */
+.clip{position:absolute;top:4px;height:46px;border-radius:5px;overflow:hidden;border:2px solid transparent;cursor:grab;user-select:none;min-width:28px;}
+.clip:hover{border-color:rgba(245,197,24,.4);}
+.clip.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc);}
+.clip.playing{border-color:#22c55e;box-shadow:0 0 0 1px #22c55e,0 0 8px rgba(34,197,94,.5);}
+.clip.vc{background:linear-gradient(180deg,#1e3a6a,#0f2040);}
+.clip.ac{background:linear-gradient(180deg,#0f3020,#0a2010);}
+.clip-frames{position:absolute;inset:0;display:flex;overflow:hidden;pointer-events:none;}
+.clip-frm{height:100%;flex-shrink:0;background-size:cover;background-position:center;opacity:.55;}
+.clip-name{position:absolute;top:3px;left:5px;font-size:9px;font-weight:700;color:rgba(255,255,255,.88);white-space:nowrap;overflow:hidden;text-shadow:0 1px 3px #000;z-index:2;max-width:90%;}
+.clip-dur{position:absolute;bottom:2px;right:5px;font-size:9px;color:rgba(255,255,255,.4);z-index:2;}
+.clip-hdl{position:absolute;top:0;bottom:0;width:7px;background:rgba(245,197,24,.75);cursor:ew-resize;z-index:5;border-radius:3px;}
+.clip-hdl.l{left:0;}
+.clip-hdl.r{right:0;}
+
+/* TRIM IN/OUT markers (draggable red lines) */
+#tl-trim-in{position:absolute;top:0;bottom:0;width:6px;background:var(--red);z-index:25;cursor:ew-resize;display:none;pointer-events:all;}
+#tl-trim-in::before{content:'IN';position:absolute;top:0;left:7px;font-size:9px;font-weight:700;color:var(--red);background:rgba(0,0,0,.8);padding:2px 5px;border-radius:3px;white-space:nowrap;}
+#tl-trim-out{position:absolute;top:0;bottom:0;width:6px;background:#ff8c00;z-index:25;cursor:ew-resize;display:none;pointer-events:all;}
+#tl-trim-out::before{content:'OUT';position:absolute;top:0;right:7px;font-size:9px;font-weight:700;color:#ff8c00;background:rgba(0,0,0,.8);padding:2px 5px;border-radius:3px;white-space:nowrap;}
+#tl-trim-zone{position:absolute;top:0;bottom:0;background:rgba(245,197,24,.1);border-top:1px dashed rgba(245,197,24,.4);border-bottom:1px dashed rgba(245,197,24,.4);z-index:22;pointer-events:none;display:none;}
+
+/* PLAYHEAD — เส้นเดียว ลากได้ เหมือน Clipchamp */
+#tl-ph{
+  position:absolute;
+  top:0;bottom:0;
+  width:2px;
+  background:var(--red);
+  z-index:30;
+  cursor:ew-resize;
+  pointer-events:all; /* ← ลากได้ */
+  touch-action:none;
+}
+/* หัวสามเหลี่ยมบนไทม์ไลน์ */
+#tl-ph::before{
+  content:'';
+  position:absolute;
+  top:-1px;
+  left:50%;
+  transform:translateX(-50%);
+  width:0;height:0;
+  border-left:7px solid transparent;
+  border-right:7px solid transparent;
+  border-top:10px solid var(--red);
+}
+/* วงกลมจุด */
+#tl-ph::after{
+  content:'';
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  width:12px;height:12px;
+  background:var(--red);
+  border-radius:50%;
+  box-shadow:0 0 6px rgba(229,62,62,.6);
+}
+
+/* RIGHT PANEL */
+#rpanel{width:258px;background:var(--sb);border-left:1px solid var(--bd);overflow-y:auto;flex-shrink:0;}
+.rp-sec{padding:11px 12px;border-bottom:1px solid var(--bd);}
+.rp-title{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px;}
+.ar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+.ar-opt{background:var(--p2);border:1.5px solid var(--bd2);border-radius:8px;padding:7px 3px;text-align:center;cursor:pointer;transition:all .15s;}
+.ar-opt:hover,.ar-opt.on{border-color:var(--acc);background:rgba(245,197,24,.09);}
+.ar-frame{margin:0 auto 4px;border:2px solid var(--tx3);border-radius:2px;}
+.ar-opt:hover .ar-frame,.ar-opt.on .ar-frame{border-color:var(--acc);}
+.ar-name{font-size:10px;font-weight:700;color:var(--tx2);}
+.ar-plat{font-size:9px;color:var(--tx3);margin-top:1px;}
+.ar-opt.on .ar-name{color:var(--acc);}
+.rp-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.rp-lbl{font-size:11px;color:var(--tx2);width:60px;flex-shrink:0;}
+.rp-val{font-size:11px;font-weight:700;color:var(--acc);min-width:40px;text-align:right;font-family:monospace;}
+.rp-sel{width:100%;background:var(--p2);border:1px solid var(--bd2);color:var(--tx);padding:6px 9px;border-radius:7px;font-size:12px;margin-bottom:6px;}
+.res-row{display:flex;gap:5px;margin-bottom:6px;}
+.res-btn{flex:1;padding:7px 3px;background:var(--p2);border:1.5px solid var(--bd2);border-radius:7px;color:var(--tx2);font-size:11px;font-weight:700;cursor:pointer;text-align:center;}
+.res-btn.on,.res-btn:hover{border-color:var(--acc);color:var(--acc);background:rgba(245,197,24,.08);}
+.rp-pair{display:flex;gap:5px;}
+.rp-sm{flex:1;padding:6px;border:1px solid var(--bd2);background:none;color:var(--tx2);border-radius:6px;font-size:10px;cursor:pointer;text-align:center;}
+.rp-sm:hover{border-color:var(--acc);color:var(--acc);}
+
+/* EXPORT MODAL */
+#exp-bg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100;display:none;align-items:center;justify-content:center;}
+#exp-bg.show{display:flex;}
+#exp-modal{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:16px;padding:22px;width:430px;max-width:95vw;}
+#exp-modal h3{font-size:16px;font-weight:700;color:var(--acc);margin-bottom:14px;}
+.em-lbl{font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+.em-inp,.em-sel{width:100%;background:#252525;border:1px solid #3a3a3a;color:var(--tx);padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:10px;}
+.em-inp:focus,.em-sel:focus{outline:none;border-color:var(--acc);}
+.em-res-row{display:flex;gap:5px;margin-bottom:10px;}
+.em-res{flex:1;padding:9px 4px;background:#252525;border:1.5px solid #3a3a3a;border-radius:8px;color:#888;font-size:12px;font-weight:700;cursor:pointer;text-align:center;}
+.em-res.on,.em-res:hover{border-color:var(--acc);color:var(--acc);background:rgba(245,197,24,.08);}
+.em-res small{display:block;font-size:9px;color:#555;margin-top:1px;}
+.em-res.on small{color:var(--acc);}
+.em-ar-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px;}
+.em-ar{background:#252525;border:1px solid #3a3a3a;border-radius:6px;padding:7px 3px;text-align:center;cursor:pointer;}
+.em-ar.on,.em-ar:hover{border-color:var(--acc);background:rgba(245,197,24,.08);}
+.em-ar .bx{margin:0 auto 3px;border:1.5px solid #555;border-radius:2px;}
+.em-ar.on .bx{border-color:var(--acc);}
+.em-ar .nm{font-size:11px;font-weight:700;color:#888;}
+.em-ar.on .nm{color:var(--acc);}
+.em-ar .pl{font-size:9px;color:#555;}
+#ep-wrap{height:7px;background:#333;border-radius:4px;overflow:hidden;margin-top:9px;display:none;}
+#ep-fill{height:100%;background:linear-gradient(90deg,var(--acc),#22c55e);width:0;transition:width .3s;}
+#ep-stat{font-size:11px;color:var(--tx2);text-align:center;margin-top:5px;min-height:15px;}
+#exp-dl{display:none;width:100%;margin-top:10px;padding:10px;background:var(--grn);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center;}
+.em-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.em-btn{padding:8px 18px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;}
+.em-btn.g{background:none;border:1px solid #3a3a3a;color:var(--tx2);}
+.em-btn.g:hover{border-color:var(--acc);color:var(--acc);}
+.em-btn.p{background:var(--acc);color:#000;border:none;}
+.em-btn.p:hover{filter:brightness(1.1);}
+.em-btn.p:disabled{opacity:.5;cursor:not-allowed;}
+
+/* FF overlay */
+#ff-ov{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+#ff-ov.show{display:flex;}
+.ff-spin{width:44px;height:44px;border:4px solid #333;border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+#toast{position:fixed;bottom:18px;right:18px;background:#252525;border:1px solid var(--acc);color:var(--tx);padding:9px 16px;border-radius:9px;font-size:12px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;box-shadow:0 8px 28px rgba(0,0,0,.5);}
+#toast.show{opacity:1;}
+
+/* Scrollbar — ใหญ่ขึ้น มองเห็นง่าย */
+::-webkit-scrollbar{width:8px;height:12px;}
+::-webkit-scrollbar-track{background:#1a1a1a;border-radius:6px;}
+::-webkit-scrollbar-thumb{background:#444;border-radius:6px;border:2px solid #1a1a1a;}
+::-webkit-scrollbar-thumb:hover{background:var(--acc);}
+/* scrollbar timeline โดยเฉพาะ — ใหญ่กว่าปกติ */
+#tl-scroll::-webkit-scrollbar{height:14px;}
+#tl-scroll::-webkit-scrollbar-track{background:#0d0d0d;}
+#tl-scroll::-webkit-scrollbar-thumb{background:#555;border-radius:7px;border:3px solid #0d0d0d;}
+#tl-scroll::-webkit-scrollbar-thumb:hover{background:var(--acc);}
+
+/* WAVEFORM STICKER ON TIMELINE */
+.wave-clip{position:absolute;top:0;bottom:0;cursor:move;user-select:none;pointer-events:all;overflow:hidden;border-radius:4px;z-index:10;background:transparent !important;}
+.wave-clip canvas{width:100%;height:100%;display:block;}
+.wave-clip .wc-hdl{position:absolute;right:0;top:0;width:8px;height:100%;cursor:ew-resize;background:rgba(255,255,255,.2);}
+.wave-clip .wc-del{position:absolute;top:2px;right:12px;font-size:10px;color:rgba(255,255,255,.7);cursor:pointer;display:none;background:rgba(0,0,0,.5);border-radius:3px;padding:1px 4px;}
+.wave-clip:hover .wc-del{display:block;}
+.fx-wave-card{background:var(--p2);border:1px solid var(--bd2);border-radius:8px;padding:6px;cursor:grab;text-align:center;font-size:10px;color:var(--tx2);transition:all .15s;}
+.fx-wave-card:hover{border-color:var(--acc);color:var(--acc);}
+.fx-wave-card canvas{width:100%;height:36px;display:block;border-radius:4px;margin-bottom:4px;}
+
+/* ═══ STICKER OVERLAY SYSTEM ═══ */
+#sticker-overlay-container{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:12;}
+.stk-el{position:absolute;cursor:move;user-select:none;pointer-events:all;border:2px solid transparent;border-radius:4px;box-sizing:border-box;}
+.stk-el:hover{border-color:rgba(245,197,24,.5);}
+.stk-el.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc);}
+.stk-el img,.stk-el video{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;border-radius:2px;}
+.stk-hdl{position:absolute;width:11px;height:11px;background:var(--acc);border-radius:2px;border:1.5px solid #000;z-index:20;pointer-events:none;display:none;}
+.stk-el.sel .stk-hdl{display:block;pointer-events:all;}
+.stk-hdl.br{bottom:-6px;right:-6px;cursor:se-resize;}
+.stk-hdl.bl{bottom:-6px;left:-6px;cursor:sw-resize;}
+.stk-hdl.tr{top:-6px;right:-6px;cursor:ne-resize;}
+.stk-hdl.tl{top:-6px;left:-6px;cursor:nw-resize;}
+.stk-del{position:absolute;top:-10px;right:-10px;width:18px;height:18px;background:#e53e3e;color:#fff;border-radius:50%;font-size:10px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:21;border:1.5px solid #000;}
+.stk-el.sel .stk-del,.stk-el:hover .stk-del{display:flex;}
+.stk-item{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:7px;border:1px solid var(--bd2);margin-bottom:4px;background:var(--p2);cursor:pointer;}
+.stk-item:hover,.stk-item.on{border-color:var(--acc);background:rgba(245,197,24,.07);}
+.stk-thumb{width:44px;height:30px;border-radius:4px;overflow:hidden;background:#111;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.stk-thumb img,.stk-thumb video{width:100%;height:100%;object-fit:contain;}
+.stk-info{flex:1;min-width:0;}
+.stk-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stk-sz{font-size:10px;color:var(--tx2);}
+.stk-acts{display:flex;gap:3px;opacity:0;}
+.stk-item:hover .stk-acts{opacity:1;}
+.stk-act{width:22px;height:22px;border-radius:4px;border:1px solid var(--bd2);background:none;color:var(--tx2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.stk-act:hover{border-color:var(--acc);color:var(--acc);}
+.stk-act.del:hover{border-color:var(--red);color:var(--red);}
+.stk-opacity-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+
+/* ═══ BADGE / FRAME SYSTEM ═══ */
+.badge-preset{background:var(--p2);border:1.5px solid var(--bd2);border-radius:8px;padding:7px 5px;text-align:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.badge-preset:hover{border-color:var(--acc);transform:translateY(-1px);box-shadow:0 3px 10px rgba(245,197,24,.2);}
+.badge-preview{width:100%;height:52px;display:block;border-radius:4px;margin-bottom:4px;}
+.badge-name{font-size:10px;font-weight:700;color:var(--tx2);}
+.badge-preset:hover .badge-name{color:var(--acc);}
+#badge-text-inp{width:100%;background:var(--p2);border:1px solid var(--bd2);color:var(--tx);padding:7px 9px;border-radius:7px;font-size:13px;resize:none;height:52px;font-family:inherit;box-sizing:border-box;}
+#badge-text-inp:focus{outline:none;border-color:var(--acc);}
+.badge-color-row{display:flex;gap:5px;align-items:center;margin-bottom:6px;}
+.badge-color-swatch{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0;}
+.badge-color-swatch.on{border-color:var(--acc);}
+</style>
+</head>
+<body>
+
+<div id="ff-ov">
+  <div class="ff-spin"></div>
+  <div id="ff-msg" style="font-size:15px;font-weight:700;color:#fff;text-align:center;max-width:320px;line-height:1.5;">กำลังโหลด FFmpeg...</div>
+  <div style="width:300px;height:8px;background:#333;border-radius:4px;overflow:hidden;margin:4px 0;">
+    <div id="ff-pct-bar" style="height:100%;width:0%;background:#f5c518;border-radius:4px;transition:width .4s ease;"></div>
+  </div>
+  <div id="ff-pct-txt" style="font-size:22px;font-weight:900;color:#f5c518;font-family:monospace;">0%</div>
+  <div id="ff-sub" style="font-size:11px;color:#888;">รอสักครู่ อาจใช้เวลา 30–90 วินาที</div>
+</div>
+
+<!-- TOP -->
+<div id="top">
+  <div class="logo-ico"><img src="icons/icon128.png" style="width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;"></div>
+  <span class="logo-txt">สุ่มเสียง VIDEOCUT</span>
+  <span class="proj">📁 โปรเจกต์ › <b id="proj-name">ใหม่</b></span>
+  <div class="sp"></div>
+  <button class="hbtn ico" id="btn-undo">↩</button>
+  <button class="hbtn ico" id="btn-redo">↪</button>
+  <button class="hbtn" id="btn-share">🔗 แชร์</button>
+  <div id="localhost-warn" style="display:none;background:rgba(239,68,68,.15);border:1px solid #ef4444;color:#ef4444;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;" title="Export ต้องเปิดผ่าน localhost — คลิกดูวิธีแก้">⚠️ file:// → Export ไม่ได้</div>
+  <button class="exp-btn" id="btn-exp">⬇ ส่งออก</button>
+</div>
+
+<div id="main">
+
+  <!-- IBAR -->
+  <div id="ibar">
+    <div class="ib on" data-p="media"><span class="ib-ico">📁</span><span class="ib-lbl">ไฟล์</span></div>
+    <div class="ib" data-p="cut"><span class="ib-ico">✂</span><span class="ib-lbl">ตัด</span></div>
+    <div class="ib" data-p="text"><span class="ib-ico">T</span><span class="ib-lbl">ข้อความ</span></div>
+    <div class="ib" data-p="fx"><span class="ib-ico">✨</span><span class="ib-lbl">เอฟเฟกต์</span></div>
+    <div class="ib" data-p="sticker"><span class="ib-ico">🖼</span><span class="ib-lbl">โลโก้</span></div>
+    <div class="ib-hr"></div>
+    <div class="ib" data-p="exp-modal"><span class="ib-ico">⬆</span><span class="ib-lbl">ส่งออก</span></div>
+  </div>
+
+  <!-- LEFT -->
+  <div id="lpanel">
+
+    <!-- MEDIA -->
+    <div id="p-media" style="display:flex;flex-direction:column;height:100%;">
+      <div class="lp-tabs">
+        <div class="lp-tab on">วิดีโอ</div>
+        <div class="lp-tab">เสียง</div>
+      </div>
+      <div class="lp-body">
+        <div class="dz" id="dz">
+          <div style="font-size:30px;">🎬</div>
+          <div class="dz-h">นำเข้าไฟล์</div>
+          <div class="dz-s">คลิกหรือลากหลายไฟล์มาวาง</div>
+          <div class="dz-fmts"><span class="dz-f">MP4</span><span class="dz-f">MOV</span><span class="dz-f">AVI</span><span class="dz-f">MKV</span><span class="dz-f">JPG</span><span class="dz-f">PNG</span><span class="dz-f">GIF</span><span class="dz-f">MP3</span><span class="dz-f">WAV</span></div>
+        </div>
+        <input type="file" id="fi" accept="video/*" multiple style="display:none"/>
+        <div class="sec-lbl">ไฟล์ (<span id="ml-cnt">0</span>)</div>
+        <div id="ml"></div>
+      </div>
+    </div>
+
+    <!-- CUT -->
+    <div id="p-cut" style="display:none;flex-direction:column;height:100%;overflow-y:auto;">
+      <div style="padding:10px 10px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;">เครื่องมือตัดแต่ง</div>
+      <div style="padding:8px 8px;">
+        <!-- Crop -->
+        <div class="trow" id="t-crop"><span class="trow-ico">⬛</span><div><div class="trow-name">ครอบตัด</div><div class="trow-desc">ดึงกรอบบนวิดีโอ</div></div><span class="trow-arr">›</span></div>
+        <div class="sub" id="s-crop">
+          <div class="sub-title">ครอบตัด <button class="sub-close" id="sc-crop">✕</button></div>
+          <div class="ar-grid2">
+            <div class="ar-card on" data-ar="free"><div class="an">🔲 อิสระ</div></div>
+            <div class="ar-card" data-ar="16:9"><div class="an">▬ 16:9</div><div class="ap">YouTube</div></div>
+            <div class="ar-card" data-ar="9:16"><div class="an">▮ 9:16</div><div class="ap">TikTok</div></div>
+            <div class="ar-card" data-ar="1:1"><div class="an">■ 1:1</div><div class="ap">IG</div></div>
+            <div class="ar-card" data-ar="4:3"><div class="an">▬ 4:3</div><div class="ap">Classic</div></div>
+            <div class="ar-card" data-ar="4:5"><div class="an">▮ 4:5</div><div class="ap">Facebook</div></div>
+          </div>
+          <button class="sub-btn" id="btn-apply-crop" style="width:100%;padding:8px;">✅ ใช้การครอบตัดนี้</button>
+        </div>
+        <!-- Trim -->
+        <div class="trow" id="t-trim"><span class="trow-ico">✂</span><div><div class="trow-name">ตัดแต่ง</div><div class="trow-desc">ลากเส้นแดงในไทม์ไลน์</div></div><span class="trow-arr">›</span></div>
+        <div class="sub" id="s-trim">
+          <div class="sub-title">ตัดแต่ง (Trim) <button class="sub-close" id="sc-trim">✕</button></div>
+          <div class="sub-row"><span class="sub-lbl">จุดเริ่ม IN</span><input type="range" id="sl-in" min="0" max="100" value="0" step="0.1"/><span class="sub-val" id="in-v">0.0s</span></div>
+          <div class="sub-row"><span class="sub-lbl">จุดสิ้นสุด OUT</span><input type="range" id="sl-out" min="0" max="100" value="100" step="0.1"/><span class="sub-val" id="out-v">–</span></div>
+          <div class="sub-btns">
+            <button class="sub-btn" id="btn-set-in">⬅ ตั้ง IN</button>
+            <button class="sub-btn" id="btn-set-out">ตั้ง OUT ➡</button>
+            <button class="sub-btn" id="btn-clear-trim">🔄 รีเซ็ต</button>
+          </div>
+        </div>
+        <!-- Speed -->
+        <div class="trow" id="t-speed"><span class="trow-ico">⚡</span><div><div class="trow-name">ความเร็ว</div><div class="trow-desc">เร็วขึ้น/ช้าลง</div></div><span class="trow-arr">›</span></div>
+        <div class="sub" id="s-speed">
+          <div class="sub-title">ความเร็ว <button class="sub-close" id="sc-speed">✕</button></div>
+          <div class="sub-row"><span class="sub-lbl">ความเร็ว</span><input type="range" id="sl-spd" min="25" max="400" value="100" step="25"/><span class="sub-val" id="spd-v">1.0×</span></div>
+          <div class="sub-btns">
+            <button class="sub-btn" data-spd="25">0.25×</button><button class="sub-btn" data-spd="50">0.5×</button>
+            <button class="sub-btn" data-spd="100">1×</button><button class="sub-btn" data-spd="150">1.5×</button>
+            <button class="sub-btn" data-spd="200">2×</button>
+          </div>
+        </div>
+        <!-- Volume -->
+        <div class="trow" id="t-vol"><span class="trow-ico">🔊</span><div><div class="trow-name">ระดับเสียง</div><div class="trow-desc">ปรับดัง/เบา/ตัดเสียง</div></div><span class="trow-arr">›</span></div>
+        <div class="sub" id="s-vol">
+          <div class="sub-title">ระดับเสียง <button class="sub-close" id="sc-vol">✕</button></div>
+          <div class="sub-row"><span class="sub-lbl">ระดับเสียง</span><input type="range" id="sl-vol" min="0" max="200" value="100"/><span class="sub-val" id="vol-v">100%</span></div>
+          <div class="sub-row"><span class="sub-lbl">ตัดเสียง</span><input type="checkbox" id="cb-mute"/><span style="font-size:11px;color:var(--tx2);margin-left:4px;">ลบเสียงออก</span></div>
+        </div>
+        <div class="trow"><span class="trow-ico">🎨</span><div><div class="trow-name">ลบสี</div><div class="trow-desc">Green screen</div></div><span class="trow-arr">›</span></div>
+        <div class="trow"><span class="trow-ico">〰</span><div><div class="trow-name">ลดเสียงรบกวน</div><div class="trow-desc">AI กรองเสียง</div></div><span class="trow-arr">›</span></div>
+        <div class="trow"><span class="trow-ico">🏷</span><div><div class="trow-name">ลบโลโก้</div><div class="trow-desc">ลบ watermark</div></div><span class="trow-arr">›</span></div>
+      </div>
+    </div>
+
+    <!-- TEXT EDITOR — เพิ่มข้อความบน preview -->
+    <div id="p-text" style="display:none;flex-direction:column;height:100%;overflow-y:auto;">
+      <div style="padding:10px 12px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;">T เพิ่มข้อความ</div>
+      <div style="padding:10px;">
+        <!-- Quick add buttons -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;">
+          <button class="txt-preset-btn" data-preset="title">🎬 Title ใหญ่</button>
+          <button class="txt-preset-btn" data-preset="subtitle">📝 Subtitle</button>
+          <button class="txt-preset-btn" data-preset="lower3">📺 Lower Third</button>
+          <button class="txt-preset-btn" data-preset="caption">💬 Caption</button>
+        </div>
+
+        <!-- Text input -->
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:var(--tx2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">ข้อความ</div>
+          <textarea id="txt-input" placeholder="พิมพ์ข้อความที่นี่..." style="width:100%;background:var(--p2);border:1px solid var(--bd2);color:var(--tx);padding:8px;border-radius:7px;font-size:13px;resize:none;height:62px;font-family:inherit;"></textarea>
+        </div>
+
+        <!-- Font family - upload from device -->
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:var(--tx2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">ฟอนต์</div>
+          <div style="display:flex;gap:5px;align-items:center;">
+            <select id="txt-font" style="flex:1;background:var(--p2);border:1px solid var(--bd2);color:var(--tx);padding:6px 8px;border-radius:7px;font-size:12px;">
+              <option value="'Segoe UI',sans-serif">Segoe UI (Default)</option>
+              <option value="Arial,sans-serif">Arial</option>
+              <option value="'Times New Roman',serif">Times New Roman</option>
+              <option value="'Courier New',monospace">Courier New</option>
+              <option value="Impact,sans-serif">Impact</option>
+              <option value="Georgia,serif">Georgia</option>
+            </select>
+            <button class="sub-btn" id="btn-load-font" title="โหลดฟอนต์จากเครื่อง (.ttf .otf)" style="white-space:nowrap;padding:6px 8px;">📂 ฟอนต์</button>
+          </div>
+          <input type="file" id="fi-font" accept=".ttf,.otf,.woff,.woff2" multiple style="display:none"/>
+          <div id="loaded-fonts" style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;"></div>
+        </div>
+
+        <!-- Size, Color, BG -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:10px;color:var(--tx2);margin-bottom:3px;">ขนาด</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="range" id="txt-size" min="8" max="120" value="36" style="flex:1;accent-color:var(--acc);"/>
+              <span id="txt-size-v" style="font-size:11px;color:var(--acc);font-weight:700;min-width:28px;">36</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--tx2);margin-bottom:3px;">ความทึบ</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <input type="range" id="txt-alpha" min="10" max="100" value="100" style="flex:1;accent-color:var(--acc);"/>
+              <span id="txt-alpha-v" style="font-size:11px;color:var(--acc);font-weight:700;min-width:28px;">100%</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div><div style="font-size:10px;color:var(--tx2);margin-bottom:3px;">สีตัวอักษร</div><input type="color" id="txt-color" value="#ffffff" style="width:100%;height:32px;border-radius:6px;border:1px solid var(--bd2);cursor:pointer;background:none;"/></div>
+          <div><div style="font-size:10px;color:var(--tx2);margin-bottom:3px;">สีพื้นหลัง</div><input type="color" id="txt-bg" value="#000000" style="width:100%;height:32px;border-radius:6px;border:1px solid var(--bd2);cursor:pointer;background:none;"/></div>
+          <div><div style="font-size:10px;color:var(--tx2);margin-bottom:3px;">สีเส้น</div><input type="color" id="txt-stroke" value="#000000" style="width:100%;height:32px;border-radius:6px;border:1px solid var(--bd2);cursor:pointer;background:none;"/></div>
+        </div>
+
+        <!-- Style toggles -->
+        <div style="display:flex;gap:5px;margin-bottom:8px;">
+          <button class="txt-style-btn" id="ts-bold" data-style="bold" title="หนา"><b>B</b></button>
+          <button class="txt-style-btn" id="ts-italic" data-style="italic" title="เอียง"><i>I</i></button>
+          <button class="txt-style-btn" id="ts-bg" data-style="bg" title="พื้นหลัง">BG</button>
+          <button class="txt-style-btn" id="ts-stroke" data-style="stroke" title="เส้นขอบ">⬜</button>
+          <button class="txt-style-btn" id="ts-shadow" data-style="shadow" title="เงา">💢</button>
+        </div>
+
+        <!-- Align -->
+        <div style="display:flex;gap:5px;margin-bottom:10px;">
+          <button class="txt-align-btn on" data-align="left">⬅</button>
+          <button class="txt-align-btn" data-align="center">≡</button>
+          <button class="txt-align-btn" data-align="right">➡</button>
+        </div>
+
+        <!-- Add button -->
+        <button id="btn-add-text" style="width:100%;padding:10px;background:var(--acc);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">➕ เพิ่มข้อความในวิดีโอ</button>
+
+        <!-- Text layers list -->
+        <div style="margin-top:10px;">
+          <div style="font-size:10px;color:var(--tx2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">ข้อความที่เพิ่มแล้ว</div>
+          <div id="txt-layers"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FX / TRANSITIONS -->
+    <div id="p-fx" style="display:none;flex-direction:column;height:100%;overflow-y:auto;">
+      <div style="padding:10px 12px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;">🎞 เปลี่ยนฉาก (Transitions)</div>
+      <div style="padding:6px 8px;font-size:10px;color:var(--tx2);border-bottom:1px solid var(--bd);">ลากมาวางที่ <b style="color:var(--acc)">+</b> ระหว่างคลิป หรือดับเบิลคลิกเพื่อใช้กับคลิปที่เลือก</div>
+      <div style="padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="fx-trans-grid"></div>
+
+      <!-- WAVEFORM STICKER SECTION -->
+      <div style="padding:10px 12px;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;margin-top:4px;">〰️ คลื่นเสียง (Waveform)</div>
+      <div style="padding:6px 8px;font-size:10px;color:var(--tx2);border-bottom:1px solid var(--bd);">ลากมาวางบน timeline หรือบน preview ได้เลย</div>
+
+      <!-- Sensitivity / Shape controls -->
+      <div style="padding:8px 10px;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;gap:7px;">
+
+        <!-- Sensitivity -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--tx2);width:54px;flex-shrink:0;">ความไว</span>
+          <input type="range" id="wave-sens" min="20" max="300" value="100" step="5" style="flex:1;accent-color:var(--acc);"/>
+          <span id="wave-sens-v" style="font-size:10px;color:var(--acc);font-weight:700;min-width:34px;text-align:right;">1.0×</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="wave-sens-btn sub-btn" data-v="50" style="padding:3px 7px;font-size:10px;">0.5×</button>
+          <button class="wave-sens-btn sub-btn" data-v="100" style="padding:3px 7px;font-size:10px;">1×</button>
+          <button class="wave-sens-btn sub-btn" data-v="150" style="padding:3px 7px;font-size:10px;">1.5×</button>
+          <button class="wave-sens-btn sub-btn" data-v="200" style="padding:3px 7px;font-size:10px;">2×</button>
+          <button class="wave-sens-btn sub-btn" data-v="300" style="padding:3px 7px;font-size:10px;">3×</button>
+        </div>
+
+        <!-- Shape mode -->
+        <div style="font-size:10px;color:var(--tx2);font-weight:600;margin-top:2px;">รูปทรง Waveform</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;" id="wave-shape-btns">
+          <button class="wave-shape-btn sub-btn on" data-shape="natural" style="padding:4px 3px;font-size:10px;text-align:center;">〰 ธรรมชาติ</button>
+          <button class="wave-shape-btn sub-btn" data-shape="flat"    style="padding:4px 3px;font-size:10px;text-align:center;">▬ เรียบ</button>
+          <button class="wave-shape-btn sub-btn" data-shape="rise"    style="padding:4px 3px;font-size:10px;text-align:center;">📈 ไล่สูง</button>
+          <button class="wave-shape-btn sub-btn" data-shape="fall"    style="padding:4px 3px;font-size:10px;text-align:center;">📉 ไล่ต่ำ</button>
+          <button class="wave-shape-btn sub-btn" data-shape="mountain" style="padding:4px 3px;font-size:10px;text-align:center;">⛰ โค้งกลาง</button>
+          <button class="wave-shape-btn sub-btn" data-shape="valley"  style="padding:4px 3px;font-size:10px;text-align:center;">🏔 โค้งข้าง</button>
+        </div>
+
+        <div style="font-size:9px;color:var(--tx3);">คลิก waveform ใน timeline เพื่อเลือก แล้วปรับ</div>
+      </div>
+
+      <div style="padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="fx-wave-grid"></div>
+    </div>
+
+    <!-- STICKER / LOGO OVERLAY PANEL -->
+    <div id="p-sticker" style="display:none;flex-direction:column;height:100%;overflow-y:auto;">
+      <div style="padding:10px 12px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;">🖼 โลโก้ / สติกเกอร์</div>
+
+      <!-- ── BADGE / FRAME ── -->
+      <div style="padding:8px 10px;border-bottom:1px solid var(--bd);">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">✨ กรอบข้อความ (Badge)</div>
+
+        <!-- Text input -->
+        <textarea id="badge-text-inp" placeholder="พิมพ์ข้อความ เช่น ลดราคาพิเศษ !"></textarea>
+
+        <!-- Font size -->
+        <div style="display:flex;align-items:center;gap:6px;margin:6px 0;">
+          <span style="font-size:10px;color:var(--tx2);width:46px;flex-shrink:0;">ขนาด</span>
+          <input type="range" id="badge-fsize" min="10" max="60" value="22" style="flex:1;accent-color:var(--acc);"/>
+          <span id="badge-fsize-v" style="font-size:10px;color:var(--acc);font-weight:700;min-width:28px;text-align:right;">22</span>
+        </div>
+
+        <!-- Colors -->
+        <div class="badge-color-row">
+          <span style="font-size:10px;color:var(--tx2);width:46px;flex-shrink:0;">สีกรอบ</span>
+          <div id="badge-colors" style="display:flex;gap:4px;flex-wrap:wrap;flex:1;">
+            <div class="badge-color-swatch on" data-c="#f5c518" style="background:#f5c518;"></div>
+            <div class="badge-color-swatch" data-c="#e53e3e" style="background:#e53e3e;"></div>
+            <div class="badge-color-swatch" data-c="#22c55e" style="background:#22c55e;"></div>
+            <div class="badge-color-swatch" data-c="#3b82f6" style="background:#3b82f6;"></div>
+            <div class="badge-color-swatch" data-c="#a855f7" style="background:#a855f7;"></div>
+            <div class="badge-color-swatch" data-c="#ffffff" style="background:#fff;border:1px solid #555;"></div>
+            <div class="badge-color-swatch" data-c="#000000" style="background:#111;border:1px solid #555;"></div>
+            <input type="color" id="badge-custom-color" value="#f5c518" title="สีกำหนดเอง" style="width:22px;height:22px;border-radius:5px;border:1.5px solid var(--bd2);cursor:pointer;padding:0;background:none;flex-shrink:0;"/>
+          </div>
+        </div>
+
+        <!-- Text color -->
+        <div class="badge-color-row">
+          <span style="font-size:10px;color:var(--tx2);width:46px;flex-shrink:0;">สีตัวอักษร</span>
+          <div id="badge-txtcolors" style="display:flex;gap:4px;flex-wrap:wrap;flex:1;">
+            <div class="badge-color-swatch on" data-c="#000000" style="background:#111;border:1px solid #555;"></div>
+            <div class="badge-color-swatch" data-c="#ffffff" style="background:#fff;border:1px solid #555;"></div>
+            <div class="badge-color-swatch" data-c="#f5c518" style="background:#f5c518;"></div>
+            <div class="badge-color-swatch" data-c="#e53e3e" style="background:#e53e3e;"></div>
+            <input type="color" id="badge-custom-txtcolor" value="#000000" title="สีตัวอักษรกำหนดเอง" style="width:22px;height:22px;border-radius:5px;border:1.5px solid var(--bd2);cursor:pointer;padding:0;background:none;flex-shrink:0;"/>
+          </div>
+        </div>
+
+        <!-- Blink speed -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
+          <span style="font-size:10px;color:var(--tx2);width:46px;flex-shrink:0;">กระพริบ</span>
+          <select id="badge-blink" style="flex:1;background:var(--p2);border:1px solid var(--bd2);color:var(--tx);padding:4px 7px;border-radius:6px;font-size:11px;">
+            <option value="0">ไม่กระพริบ</option>
+            <option value="500">เร็วมาก (0.5s)</option>
+            <option value="800" selected>เร็ว (0.8s)</option>
+            <option value="1200">ปกติ (1.2s)</option>
+            <option value="2000">ช้า (2s)</option>
+          </select>
+        </div>
+
+        <!-- Frame presets -->
+        <div style="font-size:10px;color:var(--tx2);margin-bottom:5px;font-weight:600;">เลือกสไตล์กรอบ</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px;" id="badge-presets"></div>
+
+        <button id="btn-add-badge" style="width:100%;padding:9px;background:var(--acc);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">✨ เพิ่มกรอบข้อความ</button>
+      </div>
+
+      <!-- Upload zone -->
+      <div style="padding:8px 10px;">
+        <div id="stk-dz" style="border:2px dashed var(--bd2);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:8px;">
+          <div style="font-size:26px;">🖼</div>
+          <div style="font-size:12px;font-weight:600;margin:4px 0 2px;">เพิ่มภาพ / GIF / วีดีโอ</div>
+          <div style="font-size:10px;color:var(--tx2);">PNG · JPG · GIF · WEBP · MP4 · MOV</div>
+        </div>
+        <input type="file" id="stk-fi" accept="image/*,video/mp4,video/quicktime,.gif" multiple style="display:none"/>
+
+        <!-- Opacity global -->
+        <div class="stk-opacity-row">
+          <span style="font-size:10px;color:var(--tx2);width:46px;flex-shrink:0;">ความทึบ</span>
+          <input type="range" id="stk-opacity" min="10" max="100" value="100" style="flex:1;accent-color:var(--acc);"/>
+          <span id="stk-opacity-v" style="font-size:10px;color:var(--acc);font-weight:700;min-width:30px;text-align:right;">100%</span>
+        </div>
+
+        <!-- Sticker list -->
+        <div style="font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin:4px 2px 5px;">ในโปรเจกต์ (<span id="stk-cnt">0</span>)</div>
+        <div id="stk-list"></div>
+
+        <!-- Tips -->
+        <div style="margin-top:8px;padding:8px;background:var(--p2);border-radius:7px;font-size:10px;color:var(--tx2);line-height:1.6;">
+          💡 คลิกภาพในรายการ → วางบน preview<br>
+          🖱 ลากย้ายตำแหน่ง · ลาก handle มุม resize<br>
+          ⌨️ คลิกที่ sticker บน preview → เลือก<br>
+          🗑 คลิก ✕ หรือ Del เพื่อลบ
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <div id="prev-area">
+      <div id="prev-empty"><div id="prev-empty-ico">🎬</div><div id="prev-empty-txt">นำเข้าไฟล์วิดีโอเพื่อเริ่มตัดต่อ</div></div>
+      <div id="prev-wrap">
+        <video id="prev-vid" playsinline></video>
+        <div id="tc-badge">0:00.0</div>
+        <!-- Text overlay container -->
+        <div id="txt-overlay-container" style="pointer-events:none;"></div>
+        <!-- Sticker / Logo overlay container -->
+        <div id="sticker-overlay-container"></div>
+        <!-- Inner frame resize (คลิกภาพ → ยืดหดภาพในเฟรม) -->
+        <div id="pif-overlay">
+          <div id="pif-frame">
+            <div id="pif-label">ยืดหดภาพในเฟรม — ลาก handle</div>
+            <div class="pif-hdl tl"></div><div class="pif-hdl tc"></div><div class="pif-hdl tr"></div>
+            <div class="pif-hdl ml"></div><div class="pif-hdl mr"></div>
+            <div class="pif-hdl bl"></div><div class="pif-hdl bc"></div><div class="pif-hdl br"></div>
+          </div>
+        </div>
+        <!-- Crop overlay (ใช้จากแผงตัด) -->
+        <div id="crop-ov">
+          <div id="crop-box">
+            <div class="ch tl"></div><div class="ch tc"></div><div class="ch tr"></div>
+            <div class="ch ml"></div><div class="ch mr"></div>
+            <div class="ch bl"></div><div class="ch bc"></div><div class="ch br"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAYBAR -->
+    <div id="pb">
+      <button class="pbc" id="pb-s">⏮</button>
+      <button class="pbc" id="pb-b">⬅</button>
+      <button class="pbc play on" id="pb-p">▶</button>
+      <button class="pbc" id="pb-f">➡</button>
+      <button class="pbc" id="pb-e">⏭</button>
+      <div class="pb-sep"></div>
+      <span class="pb-tc" id="pb-tc">0:00.0 / 0:00.0</span>
+      <div class="pb-sep"></div>
+      <span>🔊</span><input type="range" id="pb-vol" min="0" max="1" step="0.05" value="1" style="width:62px;"/>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:5px;">
+        <span style="font-size:10px;color:var(--tx2);">ซูม:</span>
+        <button class="pbc" id="z-out" title="ซูมออก (−)">−</button>
+        <span class="pb-zl" id="z-lbl">100%</span>
+        <button class="pbc" id="z-in" title="ซูมเข้า (+)">+</button>
+        <input type="range" id="z-sl" min="20" max="800" value="100" style="width:80px;accent-color:var(--acc);"/>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div id="tl">
+      <div id="tl-bar">
+        <button class="tlb on" id="tl-sel" title="เลือก (V)">↖</button>
+        <button class="tlb" id="tl-cut" title="ตัด">✂</button>
+        <div class="tl-sep"></div>
+        <button class="tlb red" id="tl-del" title="ลบ (Del)">🗑</button>
+        <button class="tlb" id="tl-spl" title="ตัด ณ เส้นแดง (S)">✂⚡</button>
+        <div class="tl-sep"></div>
+        <select id="trans-sel" style="background:var(--p2);border:1px solid var(--bd2);color:var(--tx);padding:4px 7px;border-radius:6px;font-size:11px;">
+          <option value="fade">🌅 Fade</option>
+          <option value="wipe">➡ Wipe</option>
+          <option value="none">⬛ ตัดตรง</option>
+        </select>
+        <div class="tl-sep"></div>
+        <input id="tl-txt-quick" type="text" placeholder="T พิมพ์แล้ว Enter เพิ่มข้อความ..." style="flex:1;background:var(--p2);border:1px solid var(--bd2);color:var(--tx);padding:5px 10px;border-radius:7px;font-size:12px;min-width:80px;"/>
+        <button class="tlb" id="tl-txt-add" title="เพิ่มข้อความ (Enter)" style="background:rgba(245,197,24,.15);border-color:var(--acc);color:var(--acc);font-weight:700;">T+</button>
+        <div class="tl-sep"></div>
+        <button class="tlb" id="tl-z-out">−</button>
+        <span style="font-size:11px;color:var(--acc);font-weight:700;min-width:40px;text-align:center;" id="tl-z-lbl">100%</span>
+        <button class="tlb" id="tl-z-in">+</button>
+        <input type="range" id="tl-z" min="20" max="800" value="100" style="width:60px;accent-color:var(--acc);"/>
+      </div>
+      <div id="tl-content">
+        <div id="tl-lbls">
+          <div class="tl-lbl">🎥 วิดีโอ 1</div>
+          <div class="tl-lbl">🎥 วิดีโอ 2</div>
+          <div class="tl-lbl" style="color:var(--acc);font-weight:700;">✏️ ข้อความ</div>
+          <div class="tl-lbl" id="lbl-audio" style="cursor:default;">🎵 เสียง<br><button id="lbl-add-audio" style="font-size:8px;color:var(--acc);cursor:pointer;background:none;border:none;padding:0;font-family:inherit;">+ เพิ่มเสียง</button></div>
+          <div class="tl-lbl">✨ เอฟเฟกต์</div>
+        </div>
+        <div id="tl-scroll">
+          <div id="tl-inner">
+            <canvas id="ruler-c" height="20"></canvas>
+            <div class="tl-tracks" id="tl-tracks">
+              <div class="tl-track vt" id="tr-v1"></div>
+              <div class="tl-track vt" id="tr-v2" style="opacity:.82"></div>
+              <div class="tl-track tt" id="tr-t" style="background:#0a0a1a;border:1px dashed rgba(245,197,24,.2);"></div>
+              <div class="tl-track at" id="tr-a">
+                <div class="audio-drop-hint">🎵 ลากไฟล์เสียงมาวางที่นี่</div>
+              </div>
+              <div class="tl-track ft" id="tr-f"><div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 10px;font-size:10px;color:rgba(255,255,255,.15);pointer-events:none;user-select:none;">〰️ ลาก waveform มาวางที่นี่</div></div>
+            </div>
+            <!-- Trim markers -->
+            <div id="tl-trim-zone"></div>
+            <div id="tl-trim-in"></div>
+            <div id="tl-trim-out"></div>
+            <!-- Playhead — ลากได้ seek วิดีโอ -->
+            <div id="tl-ph"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="rpanel">
+    <div class="rp-sec">
+      <div class="rp-title">📐 ขนาดหน้าจอ</div>
+      <div class="ar-grid">
+        <div class="ar-opt on" data-ar="16:9" data-lbl="YouTube"><div class="ar-frame" style="width:24px;height:14px;"></div><div class="ar-name">16:9</div><div class="ar-plat">YouTube</div></div>
+        <div class="ar-opt" data-ar="9:16" data-lbl="TikTok"><div class="ar-frame" style="width:11px;height:20px;"></div><div class="ar-name">9:16</div><div class="ar-plat">TikTok</div></div>
+        <div class="ar-opt" data-ar="1:1" data-lbl="IG"><div class="ar-frame" style="width:17px;height:17px;"></div><div class="ar-name">1:1</div><div class="ar-plat">IG</div></div>
+        <div class="ar-opt" data-ar="4:3" data-lbl="Classic"><div class="ar-frame" style="width:20px;height:15px;"></div><div class="ar-name">4:3</div><div class="ar-plat">Classic</div></div>
+        <div class="ar-opt" data-ar="4:5" data-lbl="FB"><div class="ar-frame" style="width:16px;height:20px;"></div><div class="ar-name">4:5</div><div class="ar-plat">Facebook</div></div>
+        <div class="ar-opt" data-ar="21:9" data-lbl="Cinema"><div class="ar-frame" style="width:26px;height:11px;"></div><div class="ar-name">21:9</div><div class="ar-plat">Cinema</div></div>
+      </div>
+    </div>
+    <div class="rp-sec">
+      <div class="rp-title">✂ ตัด (TRIM)</div>
+      <div class="rp-row"><span class="rp-lbl">IN (เริ่ม)</span><input type="range" id="rp-in" min="0" max="100" value="0" step="0.1"/><span class="rp-val" id="rp-in-v">0.0s</span></div>
+      <div class="rp-row"><span class="rp-lbl">OUT (สิ้นสุด)</span><input type="range" id="rp-out" min="0" max="100" value="100" step="0.1"/><span class="rp-val" id="rp-out-v">–</span></div>
+      <div class="rp-pair">
+        <button class="rp-sm" id="rp-set-in">⬅ ตั้ง IN</button>
+        <button class="rp-sm" id="rp-set-out">ตั้ง OUT ➡</button>
+      </div>
+    </div>
+    <div class="rp-sec">
+      <div class="rp-title">🔊 เสียง &amp; ความเร็ว</div>
+      <div class="rp-row"><span class="rp-lbl">ระดับเสียง</span><input type="range" id="rp-vol" min="0" max="200" value="100"/><span class="rp-val" id="rp-vol-v">100%</span></div>
+      <div class="rp-row"><span class="rp-lbl">ความเร็ว</span><input type="range" id="rp-spd" min="25" max="400" value="100" step="25"/><span class="rp-val" id="rp-spd-v">1.0×</span></div>
+      <div class="rp-row"><span class="rp-lbl">ตัดเสียง</span><input type="checkbox" id="rp-mute"/><span style="font-size:11px;color:var(--tx2);margin-left:4px;">ลบออก</span></div>
+    </div>
+    <div class="rp-sec">
+      <div class="rp-title">🎨 สี &amp; ฟิลเตอร์</div>
+      <div class="rp-row"><span class="rp-lbl">ความสว่าง</span><input type="range" min="-100" max="100" value="0"/><span class="rp-val">0</span></div>
+      <div class="rp-row"><span class="rp-lbl">ความเข้ม</span><input type="range" min="-100" max="100" value="0"/><span class="rp-val">0</span></div>
+      <div class="rp-row"><span class="rp-lbl">ความอิ่มสี</span><input type="range" min="-100" max="100" value="0"/><span class="rp-val">0</span></div>
+    </div>
+    <div class="rp-sec">
+      <div class="rp-title">⚙ โปรเจกต์</div>
+      <div class="res-row">
+        <button class="res-btn" data-res="854x480">480p</button>
+        <button class="res-btn on" data-res="1280x720">720p</button>
+        <button class="res-btn" data-res="1920x1080">1080p</button>
+      </div>
+      <div class="rp-row"><span class="rp-lbl">FPS</span><select class="rp-sel" style="flex:1;margin:0;padding:5px 7px;"><option>30</option><option>60</option><option>24</option></select></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div id="exp-bg">
+  <div id="exp-modal">
+    <h3>🎬 รวมและส่งออกวิดีโอ</h3>
+    <div class="em-lbl">ชื่อไฟล์</div>
+    <input class="em-inp" id="exp-name" value="suomsiang_output"/>
+    <div class="em-lbl">ความละเอียด</div>
+    <div class="em-res-row">
+      <div class="em-res" data-eres="854x480">480p<small>854×480</small></div>
+      <div class="em-res on" data-eres="1280x720">720p<small>1280×720</small></div>
+      <div class="em-res" data-eres="1920x1080">1080p<small>1920×1080</small></div>
+    </div>
+    <div class="em-lbl">ขนาดหน้าจอ</div>
+    <div class="em-ar-row">
+      <div class="em-ar on" data-ear="16:9"><div class="bx" style="width:26px;height:15px;margin:0 auto 3px;"></div><div class="nm">16:9</div><div class="pl">YouTube</div></div>
+      <div class="em-ar" data-ear="9:16"><div class="bx" style="width:13px;height:23px;margin:0 auto 3px;"></div><div class="nm">9:16</div><div class="pl">TikTok</div></div>
+      <div class="em-ar" data-ear="1:1"><div class="bx" style="width:19px;height:19px;margin:0 auto 3px;"></div><div class="nm">1:1</div><div class="pl">IG</div></div>
+      <div class="em-ar" data-ear="4:3"><div class="bx" style="width:22px;height:17px;margin:0 auto 3px;"></div><div class="nm">4:3</div><div class="pl">Classic</div></div>
+    </div>
+    <div class="em-lbl">รูปแบบ</div>
+    <select class="em-sel" id="exp-fmt">
+      <option value="mp4">MP4 (H.264) — วิดีโอ แนะนำ</option>
+      <option value="webm">WebM (VP9) — วิดีโอ</option>
+      <option value="mp3">MP3 — เสียงอย่างเดียว</option>
+      <option value="aac">AAC — เสียงคุณภาพสูง</option>
+    </select>
+    <div class="em-lbl">คุณภาพ</div>
+    <select class="em-sel" id="exp-q"><option value="18">สูง (CRF 18)</option><option value="23" selected>กลาง (CRF 23)</option><option value="28">ต่ำ (CRF 28)</option></select>
+    <!-- ขั้นตอน export -->
+    <div id="exp-steps" style="margin-top:12px;display:none;">
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:6px;font-weight:600;">ขั้นตอนการรวมวิดีโอ</div>
+      <div id="exp-step-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+    </div>
+    <div id="ep-wrap"><div id="ep-fill"></div></div>
+    <div id="ep-stat" style="margin-top:6px;"></div>
+    <a id="exp-dl" download style="display:none;width:100%;margin-top:10px;padding:12px;background:var(--grn);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center;">⬇ ดาวน์โหลดวิดีโอที่รวมแล้ว</a>
+    <div class="em-acts">
+      <button class="em-btn g" id="exp-cancel">ยกเลิก</button>
+      <button class="em-btn p" id="exp-go">🚀 เริ่มรวมและส่งออก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- FFmpeg v0.11 — โหลดผ่าน script src ตรงๆ (ไม่ใช่ blob URL) -->
+<script src="ffmpeg.min.js"></script>
+<script src="ffmpeg-core.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>
